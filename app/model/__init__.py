@@ -3,7 +3,7 @@ import pathlib
 import torch
 from PIL import Image
 from app.model.model import VGG
-from app.model.tag import color_tag
+from app.model.tag import color_tag, db_map
 from app.model.transform import transforms
 
 
@@ -22,11 +22,16 @@ class Net:
         temp_label = self.model(image_as_tensor)
         _, y_hat = torch.max(temp_label.data, 1)
 
-        for item in color_tag.keys():
-            if color_tag[item] == y_hat:
-                return item
+        # for item in color_tag.keys():
+        #     if color_tag[item] == y_hat:
+        #         return item
 
-        return '没有匹配'
+        tag_id = db_map.get(y_hat.numpy()[0])
+
+        if tag_id is None:
+            raise RuntimeError('没有匹配')
+
+        return tag_id
 
 
 signal_net = Net()
